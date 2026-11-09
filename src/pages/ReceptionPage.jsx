@@ -1,0 +1,30 @@
+/* eslint-disable no-unused-vars */
+import { useState } from 'react'
+import { initialPatients, initials, demoAccounts, postedResults, appointments } from '../data/demoData.js'
+import { Avatar, Button, PageHeading, Metric, PanelHeader, QuickAction, AttentionItem, StatusTag, Detail, EncounterLine } from '../components/ui.jsx'
+
+function ReceptionPage({ patients, bookings, onRegister, onBook }) {
+  const [route, setRoute] = useState('Outpatient')
+  const [form, setForm] = useState({ name: '', dob: '', phone: '', email: '' })
+  const [lastRegisteredNumber, setLastRegisteredNumber] = useState('')
+  const [booking, setBooking] = useState({ patientId: '', doctor: '', date: '', time: '', visitType: 'Outpatient visit' })
+  const submit = (event) => {
+    event.preventDefault()
+    const name = form.name.trim()
+    if (!name) return
+    const patient = { ...form, id: `PT-${10483 + patients.length - initialPatients.length}`, name, initials: initials(name), age: form.dob ? Math.max(0, new Date().getFullYear() - new Date(form.dob).getFullYear()) : '—', sex: 'Not specified', lastVisit: route === 'Emergency' ? 'Emergency arrival · Now' : 'Outpatient arrival · Now', status: 'Checked in', route, color: ['blue', 'violet', 'teal', 'amber'][patients.length % 4], blood: 'Not recorded', allergies: 'Not recorded', medication: 'None recorded', address: 'Not recorded', note: `${route} intake registered by Front desk / Reception. Clinical team to complete assessment and history.` }
+    onRegister(patient)
+    setLastRegisteredNumber(patient.id)
+    setForm({ name: '', dob: '', phone: '', email: '' })
+  }
+  const submitBooking = (event) => {
+    event.preventDefault()
+    const patient = patients.find((item) => item.id === booking.patientId)
+    if (!patient) return
+    onBook({ ...booking, patientName: patient.name, patientNumber: patient.id })
+    setBooking({ patientId: '', doctor: '', date: '', time: '', visitType: 'Outpatient visit' })
+  }
+  return <><PageHeading eyebrow="FRONT DESK WORKSPACE" title="Front desk / Reception" description="Register patients, generate their EMR number, and book appointments with doctors."/><div className="reception-layout"><section className="panel reception-route"><span className="eyebrow">CHOOSE ARRIVAL ROUTE</span><div className="route-options">{['Outpatient', 'Emergency'].map((item) => <button type="button" key={item} className={`route-option ${route === item ? 'selected' : ''}`} onClick={() => setRoute(item)}><i>{item === 'Emergency' ? '!' : '＋'}</i><span><b>{item}</b><small>{item === 'Emergency' ? 'Unscheduled or urgent arrival' : 'Appointment or walk-in visit'}</small></span><span className="route-check">{route === item ? '✓' : ''}</span></button>)}</div><p className="reception-note">{route === 'Emergency' ? 'Register the arrival, then direct the patient for immediate triage.' : 'Verify the patient’s identity and contact details before check-in.'}</p></section><form className="panel reception-form" onSubmit={submit}><div className="panel-header"><div><h2>Register patient</h2><p>{route} intake · Completed by reception</p></div><span className="status-tag checked">Reception</span></div><div className="form-grid"><label className="span-two">Full name<input autoFocus placeholder="e.g. Jordan Lee" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required/></label><label>Date of birth<input type="date" value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })}/></label><label>Phone number<input placeholder="Phone number" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}/></label><label className="span-two">Email address<input type="email" placeholder="name@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}/></label></div><div className="modal-actions"><Button kind="primary" type="submit">Register patient <span>→</span></Button></div>{lastRegisteredNumber && <p className="generated-number">Patient registered · EMR number <b>{lastRegisteredNumber}</b></p>}</form></div><form className="panel booking-form" onSubmit={submitBooking}><div className="panel-header"><div><h2>Book an appointment</h2><p>Link a patient with a doctor and choose a visit time.</p></div></div><div className="booking-fields"><label>Patient<select value={booking.patientId} onChange={(e) => setBooking({ ...booking, patientId: e.target.value })} required><option value="" disabled>Select patient</option>{patients.map((patient) => <option key={patient.id} value={patient.id}>{patient.name} · {patient.id}</option>)}</select></label><label>Doctor<select value={booking.doctor} onChange={(e) => setBooking({ ...booking, doctor: e.target.value })} required><option value="" disabled>Select doctor</option><option>Dr. Alex Morgan</option><option>Dr. Maya Patel</option></select></label><label>Visit type<select value={booking.visitType} onChange={(e) => setBooking({ ...booking, visitType: e.target.value })}><option>Outpatient visit</option><option>Follow-up</option><option>Consultation</option></select></label><label>Date<input type="date" value={booking.date} onChange={(e) => setBooking({ ...booking, date: e.target.value })} required/></label><label>Time<input type="time" value={booking.time} onChange={(e) => setBooking({ ...booking, time: e.target.value })} required/></label><Button kind="primary" type="submit">Book appointment <span>→</span></Button></div></form><section className="panel booking-list"><div className="panel-header"><div><h2>Booked appointments</h2><p>{bookings.length} scheduled from this front desk</p></div></div>{bookings.length ? <div className="booking-rows">{bookings.map((item) => <div className="booking-row" key={`${item.patientNumber}-${item.date}-${item.time}`}><span><b>{item.patientName}</b><small>{item.patientNumber}</small></span><span>{item.doctor}</span><span>{item.date} · {item.time}</span><span>{item.visitType}</span><StatusTag status="Scheduled"/></div>)}</div> : <p className="booking-empty">No appointments booked yet. Choose a patient and doctor above to schedule one.</p>}</section></>
+}
+
+export { ReceptionPage }

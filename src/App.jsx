@@ -51,7 +51,8 @@ function readPatientRecords() {
     const saved = window.localStorage.getItem(PATIENT_STORAGE_KEY)
     if (!saved) return initialPatients
     const records = JSON.parse(saved)
-    return Array.isArray(records) ? [...records, ...initialPatients.filter((seed) => !records.some((record) => record.id === seed.id || record.name?.trim().toLowerCase() === seed.name.toLowerCase()))] : initialPatients
+    const migrated = Array.isArray(records) ? records.map((record) => record.id === 'PT-10476' || /chukudi|chunuwe|chumuwe/i.test(record.name || '') ? { ...record, name: 'Bill Banda', initials: 'BB', email: record.email?.replace(/chukudi\.chunuwe/i, 'bill.banda') || 'bill.banda@email.com', route: 'Inpatient', status: 'In care', lastVisit: 'Nov 10, 2026', condition: 'Active pulmonary tuberculosis', medication: 'Anti-tuberculosis treatment · see active medication chart', note: 'Admitted Nov 1, 2026 with bacteriologically confirmed pulmonary tuberculosis. Demo scenario; follow local TB service plan and infection-control policy.' } : record) : initialPatients
+    return Array.isArray(migrated) ? [...migrated, ...initialPatients.filter((seed) => !migrated.some((record) => record.id === seed.id || record.name?.trim().toLowerCase() === seed.name.toLowerCase()))] : initialPatients
   } catch {
     return initialPatients
   }
@@ -71,7 +72,8 @@ function readDoctorNotes() {
   try {
     const saved = window.localStorage.getItem(DOCTOR_NOTE_STORAGE_KEY)
     const notes = saved ? JSON.parse(saved) : []
-    return Array.isArray(notes) ? [...initialDoctorNotes.filter((seed) => !notes.some((note) => note.id === seed.id)), ...notes] : initialDoctorNotes
+    const migrated = Array.isArray(notes) ? notes.map((note) => note.patientId === 'PT-10476' || /chukudi|chunuwe|chumuwe/i.test(note.patientName || '') ? { ...note, patientName: 'Bill Banda' } : note) : initialDoctorNotes
+    return Array.isArray(migrated) ? [...initialDoctorNotes.filter((seed) => !migrated.some((note) => note.id === seed.id)), ...migrated] : initialDoctorNotes
   } catch { return [] }
 }
 
@@ -133,7 +135,7 @@ function Workspace() {
   const hasFullClinicalAccess = ['Doctor', 'Nurse'].includes(staffRole)
   const isReception = staffRole === 'Front desk / Reception'
   const defaultPath = isReception ? '/reception' : '/dashboard'
-  const canAccess = (page) => (page === 'Doctors notes' ? staffRole === 'Doctor' : isClinicalStaff) || page === 'Dashboard' || (isReception && ['Front desk / Reception', 'Patients'].includes(page)) || (staffRole === 'Billing' && page === 'Billing') || staffRole === page || (staffRole === 'Store / Inventory' && page === 'Inventory')
+  const canAccess = (page) => (page === 'Doctors notes' ? staffRole === 'Doctor' : isClinicalStaff) || (page === 'Medications' && staffRole === 'Pharmacy') || page === 'Dashboard' || (isReception && ['Front desk / Reception', 'Patients'].includes(page)) || (staffRole === 'Billing' && page === 'Billing') || staffRole === page || (staffRole === 'Store / Inventory' && page === 'Inventory')
   const navigateTo = (page) => navigate(routeFor[page] || '/dashboard')
   const notify = (message) => { setToast(message); window.setTimeout(() => setToast(''), 2800) }
   const prescribeMedication = (order) => {

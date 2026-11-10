@@ -8,7 +8,7 @@ function patientDepartment(patient) {
 }
 
 function NurseStationPage({ patients, setPage, openPatient }) {
-  const [department, setDepartment] = useState('Outpatient')
+  const [department, setDepartment] = useState('Inpatient')
   const departmentPatients = patients.filter((patient) => patientDepartment(patient) === department)
 
   return <>

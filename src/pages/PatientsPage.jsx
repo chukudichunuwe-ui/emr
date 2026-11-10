@@ -21,9 +21,16 @@ function PatientChart(props) {
   return <LegacyPatientChart {...props}/>
 }
 
+function diagnosticResultTone(value) {
+  const text = String(value).toLowerCase()
+  if (/within (reference )?range|within range|no acute|unremarkable|negative for|no evidence of/.test(text)) return 'normal'
+  if (/above target|below target|below reference range|above reference range|out of range|abnormal|elevated|detected|concerning for|compatible with|\b(low|high|positive|critical)\b|flagged/.test(text)) return 'abnormal'
+  return 'neutral'
+}
+
 function PatientResults({ patient }) {
   const results = postedResults.filter((result) => result.patient === patient.name)
-  return <section className="panel chart-tab-panel"><PanelHeader title="Posted diagnostic results" subtitle={`All posted lab and radiology reports for ${patient.name}`}/>{results.length ? results.map((result) => <div className="patient-result" key={`${result.type}-${result.title}`}><span className={`result-type ${result.type.toLowerCase()}`}>{result.type}</span><span><b>{result.title}</b><small>{result.date}</small></span><p>{result.result}</p><StatusTag status="Completed"/></div>) : <div className="specialty-empty">No lab or radiology results have been posted for this patient.</div>}</section>
+  return <section className="panel chart-tab-panel"><PanelHeader title="Posted diagnostic results" subtitle={`All posted lab and radiology reports for ${patient.name}`}/>{results.length ? results.map((result) => <div className="patient-result" key={`${result.type}-${result.title}`}><span className={`result-type ${result.type.toLowerCase()}`}>{result.type}</span><span><b>{result.title}</b><small>{result.date}</small></span><p className={`clinical-result-${diagnosticResultTone(result.result)}`}>{result.result}</p><StatusTag status="Completed"/></div>) : <div className="specialty-empty">No lab or radiology results have been posted for this patient.</div>}</section>
 }
 
 export { PatientsPage, PatientChart, PatientResults }

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Button, PanelHeader } from './ui.jsx'
+import { saveNursingRecord } from '../data/nursingRecords.js'
 
 const outpatientWorkflows = ['Vital signs', 'Initial assessment']
 const inpatientWorkflows = ['ISBAR handover', 'Vital signs', 'Initial assessment', 'Fluid chart', 'Turning chart', 'Care plan', 'Nurse report', 'Medication administration']
@@ -25,6 +26,7 @@ function PatientNursingPanel({ patient, onSave }) {
 
   const save = (event) => {
     event.preventDefault()
+    saveNursingRecord({ id: `NUR-${Date.now()}`, patientId: patient.id, patientName: patient.name, type: workflow === 'Nurse report' ? 'Nurses report' : workflow, date: new Date().toISOString().slice(0, 10), time: new Date().toTimeString().slice(0, 5), nurse: 'Nursing staff', values: Object.fromEntries(Object.entries(values).filter(([key, value]) => key.startsWith(`${workflow}:`) && value).map(([key, value]) => [key.slice(workflow.length + 1), value])), createdAt: new Date().toISOString() })
     onSave(`${workflow} saved for ${patient.name}`)
     setSavedMessage('Saved just now')
   }
